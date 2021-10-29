@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Azureblue.ApplicationInsights.RequestLogging
 {
@@ -12,6 +13,11 @@ namespace Azureblue.ApplicationInsights.RequestLogging
         public static IServiceCollection AddResponseLogging(this IServiceCollection services, ResponseLoggerOptions options)
         {
             return services.AddTransient(s => new ResponseLogger(options));
+        }
+
+        public static IServiceCollection DisableIpMasking(this IServiceCollection services)
+        {
+            return services.AddSingleton<ITelemetryInitializer, CloneIpAddress>();
         }
     }
 }
