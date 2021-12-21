@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Http;
 using System.Net.Http;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
-using Azureblue.ApplicationInsights.RequestLogging.Filters;
 
 namespace ApplicationInsightsRequestLoggingTests
 {
@@ -86,6 +85,7 @@ namespace ApplicationInsightsRequestLoggingTests
                             services.AddTransient<IBodyReader, BodyReader>();
                             services.AddSingleton(telemetryWriter.Object);
                             services.AddTransient<BodyLoggerMiddleware>();
+                            services.AddTransient<ISensitiveDataFilter, SensitiveDataFilter>();
                         })
                         .Configure(app =>
                         {
