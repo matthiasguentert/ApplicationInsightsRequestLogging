@@ -44,9 +44,9 @@ namespace Azureblue.ApplicationInsights.RequestLogging
         /// <summary>
         ///     Defines the text to append in case the body should be truncated <seealso cref="MaxBytes"/>
         /// </summary>
-        public string Appendix { get; set; } = "\n---8<------------------------\nTRUNCATED DUE TO MAXBYTES LIMIT";
+        public string Appendix { get; set; } = "***TRUNCATED***";
 
-        public List<string> PropertyNamesWithSensitiveData { get; set; } = new List<string>()
+        public List<string> SensitiveDataPropertyNames { get; set; } = new List<string>()
         {
             "password",
             "secret",

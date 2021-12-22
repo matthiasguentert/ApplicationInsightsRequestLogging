@@ -10,6 +10,33 @@ namespace ApplicationInsightsRequestLoggingTests.Filters
     public class SensitiveDataFilterTests
     {
         [Fact]
+        public void Should_mask_multiple_sensitive_values()
+        {
+            // Arrange
+            var requestBody = new
+            {
+                Name = "Bommelmaier",
+                Password = "Abracadabra!",
+                AccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dnZWRJbkFzIjoiYWRtaW4iLCJpYXQiOjE0MjI3Nzk2Mzh9.gzSraSYS8EXBxLN_oWnFSRgCzcmJmMjLiuyu5CSpyHI"
+            };
+
+            var jsonWithToken = JsonSerializer.Serialize(requestBody);
+            var filter = new SensitiveDataFilter(new HashSet<string> { "token", "password" }, Array.Empty<string>());
+
+            // Act
+            var result = filter.RemoveSensitiveData(jsonWithToken);
+
+            // Assert
+            var jsonStrippedFromSensitiveData = JsonSerializer.Serialize(new
+            {
+                Name = "Bommelmaier",
+                Password = "***MASKED***",
+                AccessToken = "***MASKED***"
+            });
+            result.Should().Be(jsonStrippedFromSensitiveData);
+        }
+
+        [Fact]
         public void Should_mask_tokens_with_sensitive_data_from_json()
         {
             // Arrange

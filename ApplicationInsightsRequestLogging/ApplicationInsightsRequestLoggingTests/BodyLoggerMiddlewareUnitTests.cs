@@ -10,10 +10,12 @@ using Microsoft.AspNetCore.Http;
 using System.Net.Http;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
+using ApplicationInsightsRequestLoggingTests.Utils;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ApplicationInsightsRequestLoggingTests
 {
-    public class BodyLoggerMiddlewareTests
+    public class BodyLoggerMiddlewareUnitTests
     {
         [Fact]
         public void BodyLoggerMiddleware_Should_Throw_If_Ctor_Params_Null()
@@ -23,6 +25,59 @@ namespace ApplicationInsightsRequestLoggingTests
 
             // Assert
             action.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async void BodyLoggerMiddleware_Should_Send_Masked_Data_To_AppInsights()
+        {
+            // Arrange
+            var telemetryWriter = new Mock<ITelemetryWriter>();
+
+            using var host = await new HostBuilder()
+                .ConfigureWebHost(webBuilder =>
+                {
+                    webBuilder
+                        .UseTestServer()
+                        .ConfigureServices(services =>
+                        {
+                            services.AddAppInsightsHttpBodyLogging(o =>
+                            {
+                                o.Appendix = "***TRUNCATED***";
+                            });
+
+                            services.RemoveAll<ITelemetryWriter>();
+                            services.AddSingleton(telemetryWriter.Object);
+
+                            services.RemoveAll<ISensitiveDataFilter>();
+                            services.AddSingleton<ISensitiveDataFilter>(o => new SensitiveDataFilter(new BodyLoggerOptions()));
+                        })
+                        .Configure(app =>
+                        {
+                            app.UseMiddleware<BodyLoggerMiddleware>();
+                            app.Run(async context =>
+                            {
+                                // Send request body back in response body
+                                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                                await context.Request.Body.CopyToAsync(context.Response.Body);
+                            });
+                        });
+                })
+                .StartAsync();
+
+            var requestBody = new
+            {
+                Name = "Bommelmaier",
+                Password = "Abracadabra!",
+                AccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dnZWRJbkFzIjoiYWRtaW4iLCJpYXQiOjE0MjI3Nzk2Mzh9.gzSraSYS8EXBxLN_oWnFSRgCzcmJmMjLiuyu5CSpyHI"
+            };
+
+            // Act
+            var response = await host.GetTestClient().PostAsync("/", new JsonContent(requestBody));
+
+            // Assert
+            var expected = "{\"Name\":\"Bommelmaier\",\"Password\":\"***MASKED***\",\"AccessToken\":\"***MASKED***\"}";
+            telemetryWriter.Verify(x => x.Write(It.IsAny<HttpContext>(), "RequestBody", expected), Times.Once);
+            telemetryWriter.Verify(x => x.Write(It.IsAny<HttpContext>(), "ResponseBody", expected), Times.Once);
         }
 
         [Fact]

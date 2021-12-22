@@ -15,7 +15,7 @@ namespace Azureblue.ApplicationInsights.RequestLogging
         private readonly IEnumerable<string> _regexesForSensitiveValues;
 
 
-        public SensitiveDataFilter(BodyLoggerOptions options) : this(options.PropertyNamesWithSensitiveData, options.SensitiveDataRegexes)
+        public SensitiveDataFilter(BodyLoggerOptions options) : this(options.SensitiveDataPropertyNames, options.SensitiveDataRegexes)
         {
 
         }

@@ -12,7 +12,13 @@ namespace Azureblue.ApplicationInsights.RequestLogging
         private readonly ITelemetryWriter _telemetryWriter;
         private readonly ISensitiveDataFilter _sensitiveDataFilter;
 
-        public BodyLoggerMiddleware(IOptions<BodyLoggerOptions> options, IBodyReader bodyReader, ITelemetryWriter telemetryWriter, ISensitiveDataFilter sensitiveDataFilter)
+        public BodyLoggerMiddleware
+        (
+            IOptions<BodyLoggerOptions> options, 
+            IBodyReader bodyReader,
+            ITelemetryWriter telemetryWriter, 
+            ISensitiveDataFilter sensitiveDataFilter
+        )
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _bodyReader = bodyReader ?? throw new ArgumentNullException(nameof(bodyReader));
@@ -39,7 +45,7 @@ namespace Azureblue.ApplicationInsights.RequestLogging
                 if (_options.Value.HttpCodes.Contains(context.Response.StatusCode))
                 {
                     var responseBody = await _bodyReader.ReadResponseBodyAsync(context, _options.Value.MaxBytes, _options.Value.Appendix);
-
+                    
                     _telemetryWriter.Write(context, _options.Value.RequestBodyPropertyKey, _sensitiveDataFilter.RemoveSensitiveData(requestBody));
                     _telemetryWriter.Write(context, _options.Value.ResponseBodyPropertyKey, _sensitiveDataFilter.RemoveSensitiveData(responseBody));
                 }
