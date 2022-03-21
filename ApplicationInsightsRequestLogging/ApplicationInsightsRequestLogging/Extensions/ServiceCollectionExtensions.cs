@@ -37,9 +37,10 @@ namespace Azureblue.ApplicationInsights.RequestLogging
 
         internal static void AddBodyLogger(IServiceCollection services)
         {
-            services.AddScoped<BodyLoggerMiddleware>();
-            services.AddScoped<IBodyReader, BodyReader>();
-            services.AddScoped<ITelemetryWriter, TelemetryWriter>();
+            services.AddTransient<BodyLoggerMiddleware>();
+            services.AddTransient<IBodyReader, BodyReader>();
+            services.AddTransient<ITelemetryWriter, TelemetryWriter>();
+            services.AddTransient<ISensitiveDataFilter, SensitiveDataFilter>();
         }
 
         internal static void AddBodyLogger(IServiceCollection services, Action<BodyLoggerOptions> setupAction)
